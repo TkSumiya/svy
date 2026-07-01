@@ -1,0 +1,178 @@
+* {
+ font-family: meiryo, sans-serif; 
+}
+
+
+/*pre, dl, ol, p { line-height:150%; }*/
+
+h1, h2, h3, h4, h5, h6
+{
+	background-color: #51657b;
+	padding: 0.3em 0em 0em 0.5em;
+	color: white;
+}
+
+
+.q {
+  	border-top:    #999999 1px solid;
+  	border-left:   #999999 1px solid;
+  	border-right:   #999999 1px solid;
+  	border-bottom:   #999999 1px solid;
+	padding: .5em;
+	margin-left: 2em;
+	margin-right: 2em;
+	color: black;
+	background-color: #dce8f5;
+}
+
+.unanswered {
+    background-color: #fcc;
+}
+
+.required {
+    font-weight: bold;
+    color: white;
+    font-size: xx-small;
+    background-color: #b00;
+    padding: 1px 3px;
+
+    border-radius: 3px;
+    -webkit-border-radius: 3px;    /* Safari,Google Chrome用 */  
+    -moz-border-radius: 2px;   /* Firefox用 */  
+}
+
+.note {
+  	border-top: #000 1px dashed;
+	padding: .5em;
+	margin-left: 0em;
+	margin-right: 0em;
+	padding: 1em 1em 1em 1em;
+	background-color: #fff;
+	color: black;
+}
+
+.t {
+  	border-left:   #999999 1px solid;
+	padding: .5em;
+	margin-right: 2em;
+	background-color: #FFFFFF;
+}
+
+p.t a {
+	color: black;
+	font-size: 8pt;
+	text-align: left;
+	text-decoration: none;
+}
+
+p.t a:hover {
+	color: #60f;
+}
+
+.t2{
+	background-color: #51657b;
+	text-align: center;
+	padding: 1em 0em 1em 0em;
+}
+
+td {
+        padding: 1px 15px 1px 0px;
+	vertical-align: top;
+}
+
+.border_tb {
+  	border-top:    #000000 1px solid;
+  	border-bottom:   #000000 1px solid;
+}	
+
+.border_b {
+  	border-bottom:   #000000 1px solid;
+}	
+
+
+.group {
+	border-top: 2px solid #669;
+	border-left: 2px solid #669;
+	margin-left: 2em;
+}
+
+.groupdesc {
+	margin: 0px;
+	padding: 5px;
+	background-color: #669;
+	color: #fff;
+}
+
+.thankyou {
+	color: #66f;
+	font-size: 15pt;
+}
+
+.mikaitou {
+	color: #666;
+	text-decoration: italic;
+}
+
+em {
+	color: #900;
+	font-weight: bold;
+	font-style: normal;
+	text-decoration: underline;
+}
+
+span.changed {
+	color: #090;
+	font-weight: bold;
+	font-style: normal;
+}
+
+span.unchanged {
+}
+
+.error {
+    color: #f00;
+}
+
+div.more {
+	border:    #aaa 1px dashed;
+	padding: 0.5em 1em;
+	margin-left: 2em;
+	margin-right: 2em;
+	color: black;
+	background-color: #fff;
+
+    border-radius: 10px;        /* CSS3草案 */  
+}
+
+div.more p,div.more ul {
+    font-size: small;
+}
+
+button.submit_button{
+    padding: 10px 20px;
+    font-size: 1.2em;
+    background-color: #fff;
+    color: #51657b;
+    border-style: none;
+    cursor: pointer;
+    border-radius: 3px;        /* CSS3草案 */  
+}
+
+button.more{
+    padding: 3px 6px;
+    background-color: #999;
+    color: #fff;
+    border-style: none;
+    cursor: pointer;
+    border-radius: 3px;        /* CSS3草案 */  
+    -webkit-border-radius: 3px;    /* Safari,Google Chrome用 */  
+    -moz-border-radius: 3px;   /* Firefox用 */  
+}
+
+img.preload{
+    display:none;
+}
+
+span.labeltext {
+ font-size:15px;
+}
