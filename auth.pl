@@ -9,7 +9,7 @@ use Encode 'encode';
 
 %auth::auth_info;
 my $ldap=1;
-my $demouser=1; # 78999999 が hogehoge で入る事を許す
+my $demouser=$ENV{SURVEY_ENABLE_DEMOUSER} ? 1 : 0; # 78999999  hogehoge 
 
 #my $ldapurl = "ldaps://ldauthma.hiroshima-u.ac.jp";
 my $ldapurl = "ldaps://uniauth.hiroshima-u.ac.jp";
