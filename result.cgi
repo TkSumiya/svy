@@ -83,6 +83,7 @@ if ( $ARGV[0] eq "-down" ) {
     $is=-3;
     shift;
     $csvcode=$ARGV[0];
+    ( $csvcode =~ /^(?:windows|unicode|mac|unix)$/ ) || fatal ( "Invalid csv code" );
     shift;
 } elsif ( $ARGV[0] eq "-is" ) {
     shift;
@@ -203,6 +204,12 @@ sub escape_tag {
     $str =~ s/</&lt;/g;
     $str =~ s/>/&gt;/g;
     $str =~ s/\\EOL/<br>/g;
+    return $str;
+}
+
+sub escape_attr {
+    my $str = escape_tag(shift);
+    $str =~ s/"/&quot;/g;
     return $str;
 }
 
@@ -644,7 +651,7 @@ sub csv_download {
     my ($file_to_output,$i,$q,$c);
     my @lines;
 
-    $file_to_output="$resultdir/tmp.csv";
+    $file_to_output="$resultdir/tmp-$$.csv";
 
     if ( $csvcode eq "windows" ) {
 	open ( CSV, "| $nkf -Lw -s >$file_to_output" );
@@ -719,8 +726,13 @@ sub csv_download {
 	     "$qfile.csv",
 	     (stat($file_to_output))[7]  );
 
-    @lines = `cat $file_to_output`;
-    print @lines;
+    if ( open ( OUT, "<", $file_to_output ) ) {
+	while ( my $line = <OUT> ) {
+	    print $line;
+	}
+	close ( OUT );
+	unlink ( $file_to_output );
+    }
 }
 
 ####################################################################
@@ -890,7 +902,7 @@ sub read_question {
     my %lab;
     my @condition;
     my $e;
-    open ( Q, "nkf -w -Lu $qfile.def |" );
+    open ( Q, "-|", $nkf, "-w", "-Lu", "$qfile.def" ) || fatal("Question file is not exist.\n");
 
     $q=$e=0;
     $qattr{firstq}=1;
@@ -1089,7 +1101,7 @@ sub check_extra_text {
 	my $et_input = ${$fa[$n][$qattr{lastq}+1]}[$2];
 #	&jcode'convert(\$et_input,'sjis');
 	$html = sprintf("&nbsp;&nbsp;(%s)"
-		       ,( $et_input ne "")? $et_input:"&nbsp;&nbsp;"
+		       ,( $et_input ne "")? escape_tag($et_input):"&nbsp;&nbsp;"
 		       );
     }
     return($c,$html);
@@ -1112,7 +1124,7 @@ sub summary_extra_text {
 	    my $et_input = ${$fa[$i][$qattr{lastq}+1]}[$n_et];
 	    push(@et_list,$et_input) if ( $et_input ne "" );
         }
-        $html = sprintf("<div id='%s' style='display:none'><p class=\"t\">%s</p></div>\n",$id,join(", ",uniq_c(@et_list)) );
+        $html = sprintf("<div id='%s' style='display:none'><p class=\"t\">%s</p></div>\n",$id,escape_tag(join(", ",uniq_c(@et_list))) );
     }
     return($c,$html);
 }
