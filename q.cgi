@@ -317,7 +317,12 @@ sub print_candidate {
 
     $nstr = sprintf ( "\"Q%02d\"", $n );
 
-    print "<blockquote>\n";
+    my $choice_class = "choice-list";
+    if ( $type =~ /^[SM]/ and $type =~ /N$/ and @candidate >= 3 ) {
+	$choice_class .= " responsive-vertical";
+    }
+
+    print "<blockquote class=\"$choice_class\">\n";
     if ( $type eq "SM" ) {
 	print "<select name=$nstr>\n";
 	$i=0;
@@ -335,8 +340,8 @@ sub print_candidate {
 	    my $idlabel="opt".$cids;
 	    ++$cids;
 	    ($c,$extratext)=check_extra_text($c,$idlabel);
-	    print "<input type=\"radio\" id=\"$idlabel\" name=$nstr value=\"$i\"$checked>\n";
-	    print "<label for=\"$idlabel\"><span class=\"labeltext\">$c</span></label>$extratext$br\n";
+	    print "<span class=\"choice-item\"><input type=\"radio\" id=\"$idlabel\" name=$nstr value=\"$i\"$checked>\n";
+	    print "<label for=\"$idlabel\"><span class=\"labeltext\">$c</span></label>$extratext</span>$br\n";
 #	    print "<span class=\"labeltext\">$c</span>$extratext$br\n";
 	    ++$i;
 	}
@@ -349,8 +354,8 @@ sub print_candidate {
 	    my $idlabel="opt".$cids;
 	    ++$cids;
 	    ($c,$extratext)=check_extra_text($c,$idlabel);
-	    printf "<input type=\"checkbox\" id=\"$idlabel\" name=\"Q%02d-%d\" value=\"1\"$checked>\n", $n, $i+1;
-	    print "<label for=\"$idlabel\">$c</label>$extratext$br\n";
+	    printf "<span class=\"choice-item\"><input type=\"checkbox\" id=\"$idlabel\" name=\"Q%02d-%d\" value=\"1\"$checked>\n", $n, $i+1;
+	    print "<label for=\"$idlabel\">$c</label>$extratext</span>$br\n";
 	    ++$i;
 	}
     } elsif ( $type eq "T" ) {
