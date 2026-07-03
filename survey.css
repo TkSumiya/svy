@@ -176,3 +176,15 @@ img.preload{
 span.labeltext {
  font-size:15px;
 }
+
+
+.choice-list.responsive-vertical .choice-item {
+    display: inline;
+}
+
+@media screen and (max-width: 600px) {
+    .choice-list.responsive-vertical .choice-item {
+        display: block;
+        margin-bottom: 0.4em;
+    }
+}
