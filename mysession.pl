@@ -6,66 +6,23 @@ use Fcntl qw(:DEFAULT);
 use strict;
 my $SESSION_DIR = "session/";
 
-	$c = _random_hex(16);
-	$md5hash = md5_hex ("riise\n$REMOTE_ADDR\n$c\n" . time() . "\n$$");
-	$sfile = _session_file($sid);
-    $date = _date_string();
-    $sfile = _session_file($sid);
-    if ( ! sysopen ( FD, $sfile, O_WRONLY|O_CREAT|O_TRUNC, 0600 ) ) {
-    return if ( !_valid_sid($sid) );
-    unlink ( _session_file($sid) );
+# セッションを作成
+# セッションID を返す
+#   セッションファイルが開けない場合は空文字列を返す
+# $expire には有効期限を分単位で指定
+sub mysession_new {
+    my ( $ses, $expire ) = @_;
+    my $REMOTE_ADDR = $ENV{'REMOTE_ADDR'} || "";
+    my ( $sid, $c, $md5hash, $date );
 
-    return ( 1 ) if ( !_valid_sid($sid) );
-    $sfile = _session_file($sid);
-    $date = _date_string();
-    return 0 if ( !_valid_sid($sid) );
-    $sfile = _session_file($sid);
-    open ( FD, "<", $sfile ) || return 0;
-
-
-sub _valid_sid {
-    my ($sid) = @_;
-    return defined($sid) && $sid =~ /^[0-9a-f]{48}$/;
-}
-
-sub _session_file {
-    my ($sid) = @_;
-    return $SESSION_DIR . $sid;
-}
-
-sub _date_string {
-    my @d = localtime();
-    return sprintf("%04d/%02d/%02d %02d:%02d:%02d",
-                   $d[5]+1900, $d[4]+1, $d[3], $d[2], $d[1], $d[0]);
-}
-
-sub _random_hex {
-    my ($bytes) = @_;
-    my $buf = "";
-    if ( open(my $fh, "<", "/dev/urandom") ) {
-        read($fh, $buf, $bytes);
-        close($fh);
-    }
-    while ( length($buf) < $bytes ) {
-        $buf .= pack("L!L!L!", time(), $$, int(rand(0xffffffff)));
-    }
-    return unpack("H*", substr($buf, 0, $bytes));
-}
-
-1;
-    # を md5 ハッシュ値を計算、ハッシュ値の末尾に上の乱数を加えたものを
-    # セッションIDとして割り当てる
     do {
-	$c=sprintf("%x",rand(1000));
-	$md5hash = md5_hex ("riise\n$REMOTE_ADDR\n$c");
+	$c = _random_hex(8);
+	$md5hash = md5_hex ("riise\n$REMOTE_ADDR\n$c\n" . time() . "\n$$");
 	$sid = $md5hash . $c;
-	$sfile = $SESSION_DIR . $sid;
-	main::logging($sfile);
-    } while ( -e ( $sfile ) );
+	main::logging(_session_file($sid));
+    } while ( -e ( _session_file($sid) ) );
 
-
-    $date = `date '+%Y/%m/%d %H:%M:%S'`;
-    chomp ( $date );
+    $date = _date_string();
     $$ses{cdate} = $date;
     $$ses{ctime} = time();
     $$ses{host}= $REMOTE_ADDR;
@@ -92,17 +49,16 @@ sub _random_hex {
 sub mysession_write_var {
     my ( $sid, %ses )  = @_;
     my ( $sfile, $key, $val );
-    $sfile = $SESSION_DIR . $sid;
+
+    return -1 if ( !_valid_sid($sid) );
+    $sfile = _session_file($sid);
 
     debug_str ( "sfile = $sfile" );
 
-#    (-w $sfile) || return (-1);
-
-    if ( ! open ( FD, ">$sfile") ) {
+    if ( ! sysopen ( FD, $sfile, O_WRONLY|O_CREAT|O_TRUNC, 0600 ) ) {
 	return -1;
     }
 
-#    while (list ($key, $val) = each ($ses) ) {
     foreach $key ( sort keys %ses ) {
 	$val = $ses{$key};
 	$val =~ s/\n/\\EOL/g;
@@ -123,7 +79,8 @@ sub debug_str {
 # セッションファイルを削除する
 sub mysession_destroy {
     my ( $sid ) = @_;
-    unlink ( $SESSION_DIR . $sid );
+    return if ( !_valid_sid($sid) );
+    unlink ( _session_file($sid) );
 }
 
 
@@ -133,18 +90,12 @@ sub mysession_destroy {
 # OK の場合、ファイルに保存されている変数を $ses にセットして帰る
 sub mysession_open {
     my ( $sid, $ses ) = @_;
-    my $REMOTE_ADDR=$ENV{'REMOTE_ADDR'};
-    my ( $md5hash, $c, $sfile, $ret );
+    my ( $sfile, $ret );
 
-    # session id が正しいかどうかをチェック
-#    $md5hash = substr($sid,0,32);
-#    $c = substr($sid,32);
-#    if ( $md5hash != md5_hex ( "riise\n$REMOTE_ADDR\n$c" ) ) {
-#	return ( 1 );
-#    }
+    return ( 1 ) if ( !_valid_sid($sid) );
 
     # session ファイルが存在するかどうかをチェック
-    $sfile = $SESSION_DIR . $sid;
+    $sfile = _session_file($sid);
     ( -r  $sfile  ) || return ( 1 );
 
     $ret = mysession_read_var ( $sid, $ses );
@@ -162,12 +113,13 @@ sub mysession_close {
     my ( $sid , $ses, $expire ) = @_;
     my ( $date );
 
+    return -1 if ( !_valid_sid($sid) );
+
     if ( $expire>0 ) {
 	$$ses{'expire'} = time()+$expire*60;
     }
     
-    $date = `date '+%Y/%m/%d %H:%M:%S'`;
-    chomp ( $date );
+    $date = _date_string();
     $$ses{'adate'} = $date;
     $$ses{'atime'} = time();
     return mysession_write_var ( $sid, %$ses );
@@ -178,22 +130,54 @@ sub mysession_read_var {
     my ( $sid, $ses ) = @_;
     my ( $sfile, $line, $key, $val );
 
-    $sfile = $SESSION_DIR . $sid;
+    return 0 if ( !_valid_sid($sid) );
+    $sfile = _session_file($sid);
     
     (-r $sfile) || return 0;
     
-    open ( FD, $sfile );
+    open ( FD, "<", $sfile ) || return 0;
     while ( $line = <FD> ) {
-      chomp ( $line );
-      if ( $line =~ /^([^:]+):(.*)$/ ) {
-	  $key = $1;
-	  $val = $2;
+	chomp ( $line );
+	if ( $line =~ /^([^:]+):(.*)$/ ) {
+	    $key = $1;
+	    $val = $2;
 
-#	  print "$key, $val\n";
-	  $val =~ s/\\EOL/\n/g;
-	  $$ses{$key} = $val;
-      }
-  }
+	    $val =~ s/\\EOL/\n/g;
+	    $$ses{$key} = $val;
+	}
+    }
     close ( FD );
     return 1;
 }
+
+sub _valid_sid {
+    my ($sid) = @_;
+    return defined($sid) && $sid =~ /^[0-9a-f]{48}$/;
+}
+
+sub _session_file {
+    my ($sid) = @_;
+    return $SESSION_DIR . $sid;
+}
+
+sub _date_string {
+    my @d = localtime();
+    return sprintf("%04d/%02d/%02d %02d:%02d:%02d",
+		   $d[5]+1900, $d[4]+1, $d[3], $d[2], $d[1], $d[0]);
+}
+
+sub _random_hex {
+    my ($bytes) = @_;
+    my $buf = "";
+    if ( open( URANDOM, "<", "/dev/urandom" ) ) {
+	binmode URANDOM;
+	read(URANDOM, $buf, $bytes);
+	close(URANDOM);
+    }
+    while ( length($buf) < $bytes ) {
+	$buf .= pack("LLL", time(), $$, int(rand(0xffffffff)));
+    }
+    return unpack("H*", substr($buf, 0, $bytes));
+}
+
+1;

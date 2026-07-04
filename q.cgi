@@ -42,16 +42,6 @@ my $nkf = "/usr/bin/nkf";
 
 my %inputv;
 
-    if ( $qfile !~ /^[a-zA-Z0-9._-]+$/ ) {
-	logging("Invalid question file name.");
-	fatal("Invalid question file.\n");
-    }
-
-if ( $ses{qfile} !~ /^[a-zA-Z0-9._-]+$/ ) {
-    logging("Invalid question file name in session.");
-    fatal("Invalid question file.\n");
-}
-
 my $reqchecked=0; # 提出一歩手前までいって、必須項目チェックをした
 
 ####################################################################
@@ -67,6 +57,11 @@ if ( ! $inputv{sid} ) {
     if ( ! $qfile ) {
 	logging("Question file is not specified.");
 	fatal("Question file is not specified.\n");
+    }
+
+    if ( $qfile !~ /^[a-zA-Z0-9._-]+$/ ) {
+	logging("Invalid question file name.");
+	fatal("Invalid question file.\n");
     }
     
     if (! -f "$qfile.def" ) {
@@ -94,6 +89,11 @@ if ( ! $inputv{sid} ) {
 	redirect_url($ses{home_url});
 	exit;
     }
+}
+
+if ( $ses{qfile} !~ /^[a-zA-Z0-9._-]+$/ ) {
+    logging("Invalid question file name in session.");
+    fatal("Invalid question file.\n");
 }
 
 read_question ( $ses{qfile} );
@@ -478,7 +478,6 @@ sub print_thankyou {
 # $fq[$i][3] -> possible choice for answer (array)
 # $fq[$i][4] -> required or not
 #
-    open ( Q, "-|", $nkf, "-w", "-Lu", "$qfile.def" ) || fatal("Question file is not exist.\n");
 #  $i 番の問題についてそれを表示するかいなかを
 #  if ( eval ( $fc[$i] ) ) { ... }
 #  で判断できる。
@@ -502,7 +501,7 @@ sub read_question {
     my %lab;
     my @condition;
     my $e;
-    open ( Q, "nkf -w -Lu $qfile.def |" );
+    open ( Q, "-|", $nkf, "-w", "-Lu", "$qfile.def" ) || fatal("Question file is not exist.\n");
 
     $q=$e=0;
     $qattr{firstq}=1;
@@ -972,4 +971,3 @@ HTML
 }
 
 #
-
